@@ -82,7 +82,12 @@ class LoadCache(Dataset):
                 angle = random.uniform(-5, 5)
                 h, w = img_np.shape[:2]
                 M = cv2.getRotationMatrix2D((w//2, h//2), angle, 1.0)
-                img_np = cv2.warpAffine(img_np, M, (w, h), borderMode=cv2.BORDER_CONSTANT, borderValue=[223, 108, 2])
+
+                # 自動判斷背景色：取圖片左上角第一個像素的值
+                bg_val = int(img_np[0, 0]) if self.ImageChannel == 1 else [int(x) for x in img_np[0, 0]]
+
+                img_np = cv2.warpAffine(img_np, M, (w, h), borderMode=cv2.BORDER_CONSTANT, borderValue=bg_val)
+
 
             image = Image.fromarray(img_np)
 
