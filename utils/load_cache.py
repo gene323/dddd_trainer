@@ -1,5 +1,8 @@
 import json
 import os
+import random
+import numpy as np
+import cv2
 
 import torch
 
@@ -60,6 +63,29 @@ class LoadCache(Dataset):
                     image = image.resize((int(image_width * (height / image_height)), height))
             else:
                 image = image.resize((width, height))
+
+            img_np = np.array(image)
+            # augmentation
+            if random.random() > 0.5:
+                shift_px = random.randint(1, 3)
+                direction = random.choice(['left', 'right'])
+                h, w = img_np.shape[:2]
+                shifted = np.zeros_like(img_np)
+                
+                if direction == 'right':
+                    shifted[:, shift_px:] = img_np[:, :-shift_px]
+                else:
+                    shifted[:, :-shift_px] = img_np[:, shift_px:]
+                img_np = shifted
+
+            if random.random() > 0.3:
+                angle = random.uniform(-5, 5)
+                h, w = img_np.shape[:2]
+                M = cv2.getRotationMatrix2D((w//2, h//2), angle, 1.0)
+                img_np = cv2.warpAffine(img_np, M, (w, h), borderMode=cv2.BORDER_CONSTANT, borderValue=[223, 108, 2])
+
+            image = Image.fromarray(img_np)
+
             label = [int(self.charset.index(item)) for item in list(image_label)]
             return image, label
 
